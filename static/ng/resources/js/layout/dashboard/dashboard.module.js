@@ -4,8 +4,7 @@
   
   angular
     .module('harbor.layout.dashboard', [
-      'harbor.services.repository',
-      'harbor.services.log'
+      'harbor.services.repository'
     ]);
   
 })();
