@@ -1,8 +1,11 @@
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
-import { SearchEvent } from '../search-event';
+import { Subscription } from 'rxjs/Subscription';
+
+import { SearchTriggerService } from './search-trigger.service';
+import { harborRootRoute } from '../../shared/shared.const';
 
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
@@ -13,32 +16,52 @@ const deBounceTime = 500; //ms
     selector: 'global-search',
     templateUrl: "global-search.component.html"
 })
-export class GlobalSearchComponent implements OnInit {
-    //Publish search event to parent
-    @Output() searchEvt = new EventEmitter<SearchEvent>();
-
+export class GlobalSearchComponent implements OnInit, OnDestroy {
     //Keep search term as Subject
     private searchTerms = new Subject<string>();
 
+    //Keep subscription for future use
+    private searchSub: Subscription;
+    private stateSub: Subscription;
+
+    //To indicate if the result panel is opened
+    private isResPanelOpened: boolean = false;
+
+    constructor(
+        private searchTrigger: SearchTriggerService,
+        private router: Router) { }
+
+    public get shouldHide(): boolean {
+        return this.router.routerState.snapshot.url === harborRootRoute && !this.isResPanelOpened;
+    }
+
     //Implement ngOnIni
     ngOnInit(): void {
-        this.searchTerms
+        this.searchSub = this.searchTerms
             .debounceTime(deBounceTime)
             .distinctUntilChanged()
             .subscribe(term => {
-                this.searchEvt.emit({
-                    term: term
-                });
+                this.searchTrigger.triggerSearch(term);
             });
+
+        this.stateSub = this.searchTrigger.searchInputChan$.subscribe(state => {
+            this.isResPanelOpened = state;
+        });
+    }
+
+    ngOnDestroy(): void {
+        if (this.searchSub) {
+            this.searchSub.unsubscribe();
+        }
+        if (this.stateSub) {
+            this.stateSub.unsubscribe();
+        }
     }
 
     //Handle the term inputting event
     search(term: string): void {
-        //Send event only when term is not empty
+        //Send event even term is empty
 
-        let nextTerm = term.trim();
-        if (nextTerm != "") {
-            this.searchTerms.next(nextTerm);
-        }
+        this.searchTerms.next(term.trim());
     }
 }
