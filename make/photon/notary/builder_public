@@ -27,7 +27,8 @@ set -e
 
 # the temp folder to store binary file...
 mkdir -p binary
-rm -rf binary || true
+rm -rf binary/notary-server || true
+rm -rf binary/notary-signer || true
 
 cd `dirname $0`
 cur=$PWD
