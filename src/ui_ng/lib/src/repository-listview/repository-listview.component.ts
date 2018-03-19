@@ -34,7 +34,7 @@ import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation
 import { ConfirmationMessage } from '../confirmation-dialog/confirmation-message';
 import { ConfirmationAcknowledgement } from '../confirmation-dialog/confirmation-state-message';
 import { Subscription } from 'rxjs/Subscription';
-import { Tag, TagClickEvent } from '../service/interface';
+import { Tag } from '../service/interface';
 
 import { State } from "clarity-angular";
 import {
