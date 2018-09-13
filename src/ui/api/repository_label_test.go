@@ -250,4 +250,6 @@ func TestRemoveFromRepository(t *testing.T) {
 	}, &labels)
 	require.Nil(t, err)
 	require.Equal(t, 0, len(labels))
+
+	dao.DeleteLabel(proLibraryLabelID)
 }
