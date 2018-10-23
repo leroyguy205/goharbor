@@ -1,4 +1,16 @@
-// Copyright Project Harbor Authors. All rights reserved.
+// Copyright Project Harbor Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package impl
 
@@ -19,6 +31,7 @@ import (
 	"github.com/goharbor/harbor/src/jobservice/job"
 	jlogger "github.com/goharbor/harbor/src/jobservice/job/impl/logger"
 	"github.com/goharbor/harbor/src/jobservice/logger"
+	jmodel "github.com/goharbor/harbor/src/jobservice/models"
 )
 
 const (
@@ -38,6 +51,9 @@ type Context struct {
 
 	// checkin func
 	checkInFunc job.CheckInFunc
+
+	// launch job
+	launchJobFunc job.LaunchJobFunc
 
 	// other required information
 	properties map[string]interface{}
@@ -138,6 +154,18 @@ func (c *Context) Build(dep env.JobData) (env.JobContext, error) {
 		return nil, errors.New("failed to inject checkInFunc")
 	}
 
+	if launchJobFunc, ok := dep.ExtraData["launchJobFunc"]; ok {
+		if reflect.TypeOf(launchJobFunc).Kind() == reflect.Func {
+			if funcRef, ok := launchJobFunc.(job.LaunchJobFunc); ok {
+				jContext.launchJobFunc = funcRef
+			}
+		}
+	}
+
+	if jContext.launchJobFunc == nil {
+		return nil, errors.New("failed to inject launchJobFunc")
+	}
+
 	return jContext, nil
 }
 
@@ -175,6 +203,15 @@ func (c *Context) OPCommand() (string, bool) {
 // GetLogger returns the logger
 func (c *Context) GetLogger() logger.Interface {
 	return c.logger
+}
+
+// LaunchJob launches sub jobs
+func (c *Context) LaunchJob(req jmodel.JobRequest) (jmodel.JobStats, error) {
+	if c.launchJobFunc == nil {
+		return jmodel.JobStats{}, errors.New("nil launch job function")
+	}
+
+	return c.launchJobFunc(req)
 }
 
 func getDBFromConfig(cfg map[string]interface{}) *models.Database {
