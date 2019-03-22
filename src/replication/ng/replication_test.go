@@ -17,15 +17,28 @@
 package ng
 
 import (
+	"io/ioutil"
+	"os"
+	"path"
 	"testing"
-	// "github.com/stretchr/testify/assert"
-	// "github.com/stretchr/testify/require"
+
+	"github.com/goharbor/harbor/src/core/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInit(t *testing.T) {
-	// TODO add testing code
-	// err := Init()
-	// require.Nil(t, err)
-	// assert.NotNil(t, OperationCtl)
-	// TODO add check for RegistryMgr and ExecutionMgr
+	key := path.Join(os.TempDir(), "key")
+	err := ioutil.WriteFile(key, []byte{'k'}, os.ModePerm)
+	require.Nil(t, err)
+	defer os.Remove(key)
+	err = os.Setenv("KEY_PATH", key)
+	require.Nil(t, err)
+
+	config.InitWithSettings(nil)
+	err = Init()
+	require.Nil(t, err)
+	assert.NotNil(t, PolicyMgr)
+	assert.NotNil(t, RegistryMgr)
+	assert.NotNil(t, OperationCtl)
 }
