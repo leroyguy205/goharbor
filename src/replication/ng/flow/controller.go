@@ -14,105 +14,23 @@
 
 package flow
 
-import (
-	"fmt"
+// Flow defines  replication flow
+type Flow interface {
+	Run(interface{}) error
+}
 
-	"github.com/goharbor/harbor/src/common/utils/log"
-	"github.com/goharbor/harbor/src/replication/ng/model"
-
-	"github.com/goharbor/harbor/src/replication/ng/execution"
-	"github.com/goharbor/harbor/src/replication/ng/registry"
-	"github.com/goharbor/harbor/src/replication/ng/scheduler"
-)
-
-// Controller controls the replication flow
+// Controller is the controller that controls the replication flows
 type Controller interface {
-	// Start a replication according to the policy and returns the
-	// execution ID and error
-	StartReplication(policy *model.Policy) (int64, error)
-	// Stop the replication specified by the execution ID
-	StopReplication(int64) error
+	Start(Flow) error
 }
 
-// NewController returns an instance of a Controller
-func NewController(registryMgr registry.Manager,
-	executionMgr execution.Manager, scheduler scheduler.Scheduler) (Controller, error) {
-	if registryMgr == nil || executionMgr == nil || scheduler == nil {
-		// TODO(ChenDe): Uncomment it when execution manager is ready
-		// return nil, errors.New("invalid params")
-	}
-	return &defaultController{
-		registryMgr:  registryMgr,
-		executionMgr: executionMgr,
-		scheduler:    scheduler,
-	}, nil
+// NewController returns an instance of the default flow controller
+func NewController() Controller {
+	return &controller{}
 }
 
-// defaultController is the default implement for the Controller
-type defaultController struct {
-	registryMgr  registry.Manager
-	executionMgr execution.Manager
-	scheduler    scheduler.Scheduler
-}
+type controller struct{}
 
-// Start a replication according to the policy
-func (d *defaultController) StartReplication(policy *model.Policy) (int64, error) {
-	log.Infof("starting the replication based on the policy %d ...", policy.ID)
-
-	flow, err := newFlow(policy, d.registryMgr, d.executionMgr, d.scheduler)
-	if err != nil {
-		return 0, fmt.Errorf("failed to create the flow object based on policy %d: %v", policy.ID, err)
-	}
-
-	// create the execution record
-	id, err := flow.createExecution()
-	if err != nil {
-		return 0, fmt.Errorf("failed to create the execution record for replication based on policy %d: %v", policy.ID, err)
-	}
-
-	// fetch resources from the source registry
-	if err := flow.fetchResources(); err != nil {
-		// just log the error message and return the execution ID
-		log.Errorf("failed to fetch resources for the execution %d: %v", id, err)
-		return id, nil
-	}
-
-	// if no resources need to be replicated, mark the execution success and return
-	if len(flow.srcResources) == 0 {
-		flow.markExecutionSuccess("no resources need to be replicated")
-		log.Infof("no resources need to be replicated for the execution %d, skip", id)
-		return id, nil
-	}
-
-	// create the namespace on the destination registry
-	if err = flow.createNamespace(); err != nil {
-		log.Errorf("failed to create the namespace %s for the execution %d on the destination registry: %v", policy.DestNamespace, id, err)
-		return id, nil
-	}
-
-	// preprocess the resources
-	if err = flow.preprocess(); err != nil {
-		log.Errorf("failed to preprocess the resources for the execution %d: %v", id, err)
-		return id, nil
-	}
-
-	// create task records in database
-	if err = flow.createTasks(); err != nil {
-		log.Errorf("failed to create task records for the execution %d: %v", id, err)
-		return id, nil
-	}
-
-	// schedule the tasks
-	if err = flow.schedule(); err != nil {
-		log.Errorf("failed to schedule the execution %d: %v", id, err)
-		return id, nil
-	}
-
-	log.Infof("the execution %d scheduled", id)
-	return id, nil
-}
-
-func (d *defaultController) StopReplication(id int64) error {
-	// TODO
-	return nil
+func (c *controller) Start(flow Flow) error {
+	return flow.Run(nil)
 }
