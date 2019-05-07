@@ -75,7 +75,7 @@ log:
   location: /var/log/harbor
 
 #This attribute is for migrator to detect the version of the .cfg file, DO NOT MODIFY!
-_version: 1.7.0
+_version: 1.8.0
 
 # Uncomment external_database if using external database. And the password will replace the the password setting in database.
 # And currently only support postgres.
