@@ -17,6 +17,7 @@ package middlewares
 import (
 	"errors"
 	"github.com/goharbor/harbor/src/core/middlewares/registryproxy"
+	"github.com/goharbor/harbor/src/core/middlewares/util"
 	"net/http"
 )
 
@@ -35,5 +36,6 @@ func Init() error {
 
 // Handle handles the request.
 func Handle(rw http.ResponseWriter, req *http.Request) {
-	head.ServeHTTP(rw, req)
+	customResW := util.NewCustomResponseWriter(rw)
+	head.ServeHTTP(customResW, req)
 }
