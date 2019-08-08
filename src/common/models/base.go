@@ -38,6 +38,7 @@ func init() {
 		new(Robot),
 		new(OIDCUser),
 		new(Blob),
+		new(ProjectBlob),
 		new(Artifact),
 		new(ArtifactAndBlob),
 		new(CVEWhitelist),
