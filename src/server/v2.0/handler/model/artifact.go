@@ -19,5 +19,5 @@ import "github.com/goharbor/harbor/src/api/artifact"
 // Artifact model
 type Artifact struct {
 	artifact.Artifact
-	// TODO add other properties: scan result
+	ScanOverview map[string]interface{} `json:"scan_overview"`
 }
