@@ -7,6 +7,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { CookieService } from "ngx-cookie";
 import * as SwaggerUI from 'swagger-ui';
 import { mergeDeep } from "../../lib/utils/utils";
+import { DevCenterBase } from "./dev-center-base";
 
 enum SwaggerJsonUrls {
   SWAGGER1 = '/swagger.json',
@@ -19,41 +20,22 @@ enum SwaggerJsonUrls {
   viewProviders: [Title],
   styleUrls: ['dev-center.component.scss']
 })
-export class DevCenterComponent implements AfterViewInit, OnInit {
+export class DevCenterComponent extends DevCenterBase implements AfterViewInit, OnInit {
   private ui: any;
   constructor(
     private el: ElementRef,
     private http: HttpClient,
-    private translate: TranslateService,
-    private cookieService: CookieService,
-    private titleService: Title) {
-  }
-
-  ngOnInit() {
-    this.setTitle("APP_TITLE.HARBOR_SWAGGER");
-  }
-
-  public setTitle(key: string) {
-    this.translate.get(key).subscribe((res: string) => {
-      this.titleService.setTitle(res);
-    });
+    public translate: TranslateService,
+    public cookieService: CookieService,
+    public titleService: Title) {
+      super(translate, cookieService, titleService);
   }
 
   ngAfterViewInit() {
-
+    this.getSwaggerUI();
+  }
+  getSwaggerUI() {
     const _this = this;
-    const interceptor = {
-      requestInterceptor: {
-        apply: (requestObj) => {
-          const csrfCookie = this.cookieService.get('__csrf');
-          const headers = requestObj.headers || {};
-          if (csrfCookie) {
-            headers["X-Harbor-CSRF-Token"] = csrfCookie;
-          }
-          return requestObj;
-        }
-      }
-    };
     forkJoin([this.http.get(SwaggerJsonUrls.SWAGGER1), this.http.get(SwaggerJsonUrls.SWAGGER2)])
       .pipe(catchError(error => observableThrowError(error)))
       .subscribe(jsonArr => {
@@ -69,7 +51,7 @@ export class DevCenterComponent implements AfterViewInit, OnInit {
           presets: [
             SwaggerUI.presets.apis
           ],
-          requestInterceptor: interceptor.requestInterceptor,
+          requestInterceptor: this.getCsrfInterceptor().requestInterceptor,
           authorizations: {
             csrf: function () {
               this.headers['X-Harbor-CSRF-Token'] = _this.cookieService.get('__csrf');
