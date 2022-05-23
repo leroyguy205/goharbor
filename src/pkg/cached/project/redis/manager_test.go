@@ -61,14 +61,14 @@ func (m *managerTestSuite) TestCount() {
 	m.Equal(int64(100), c)
 }
 
-func (m *managerTestSuite) List() {
+func (m *managerTestSuite) TestList() {
 	m.projectMgr.On("List", mock.Anything, mock.Anything).Return([]*models.Project{}, nil)
 	ps, err := m.cachedManager.List(m.ctx, q.New(q.KeyWords{}))
 	m.NoError(err)
 	m.ElementsMatch([]*models.Project{}, ps)
 }
 
-func (m *managerTestSuite) ListRoles() {
+func (m *managerTestSuite) TestListRoles() {
 	m.projectMgr.On("ListRoles", mock.Anything, mock.Anything, mock.Anything).Return([]int{1}, nil)
 	rs, err := m.cachedManager.ListRoles(m.ctx, 1, 1)
 	m.NoError(err)
