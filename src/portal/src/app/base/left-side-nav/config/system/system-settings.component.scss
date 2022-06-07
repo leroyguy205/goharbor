@@ -6,7 +6,7 @@
 .clr-form-horizontal {
   .clr-form-control {
     & >.clr-control-label {
-      width: 12rem;
+      width: 14rem;
     }
   }
   .flex-direction-column {
@@ -135,4 +135,14 @@
 }
 .margin-top-3px {
   margin-top: 3px;
+}
+.center {
+  display: flex;
+  align-items: center;
+}
+.clr-input {
+  width: 12rem;
+}
+.pro-creation {
+  width: 12rem;
 }
