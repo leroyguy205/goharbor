@@ -193,7 +193,7 @@ describe('SummaryComponent', () => {
     it('should create', () => {
         expect(component).toBeTruthy();
     });
-    it('should get readme  and render', async () => {
+    it('should get readme and render', async () => {
         component.summaryLink = mockedLink;
         component.ngOnInit();
         fixture.detectChanges();

@@ -16,6 +16,7 @@ import { AdditionsService } from '../additions.service';
 import { AdditionLink } from '../../../../../../../../ng-swagger-gen/models/addition-link';
 import { ErrorHandler } from '../../../../../../shared/units/error-handler';
 import { finalize } from 'rxjs/operators';
+import { Artifact } from 'ng-swagger-gen/models/artifact';
 
 @Component({
     selector: 'hbr-artifact-summary',
@@ -24,7 +25,9 @@ import { finalize } from 'rxjs/operators';
 })
 export class SummaryComponent implements OnInit {
     @Input() summaryLink: AdditionLink;
+    @Input() artifactDetails: Artifact;
     readme: string;
+    type: string;
     loading: boolean = false;
     constructor(
         private errorHandler: ErrorHandler,
@@ -32,6 +35,9 @@ export class SummaryComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        if (this.artifactDetails) {
+            this.type = this.artifactDetails.type;
+        }
         this.getReadme();
     }
     getReadme() {
@@ -46,12 +52,16 @@ export class SummaryComponent implements OnInit {
                 .pipe(finalize(() => (this.loading = false)))
                 .subscribe(
                     res => {
-                        this.readme = res;
+                        this.readme = this.removeFrontMatter(res);
                     },
                     error => {
                         this.errorHandler.error(error);
                     }
                 );
         }
+    }
+
+    removeFrontMatter(content: string): string {
+        return content.replace(/^---[\s\S]*?---\s*/, '');
     }
 }
